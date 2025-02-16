@@ -88,7 +88,7 @@ async def upload_files(files: list[UploadFile] = File(...)):
         logger.info(f"✅ Arquivo ZIP criado com sucesso: {zip_path}")
         return {
             "message": "Arquivo enviado com sucesso!",
-            "download_link": f"http://localhost:{os.getenv('API_PORT', '8000')}/download/{secure_token}"
+            "download_link": f"https://sobe-ai.pedrovs.dev/download/{secure_token}"
         }
 
     except Exception as e:
