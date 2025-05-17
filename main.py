@@ -37,12 +37,12 @@ except redis.ConnectionError as e:
 scheduler = BackgroundScheduler()
 scheduler.start()
 
+
 def generate_secure_token(package_id: str):
-    """Gera um token seguro baseado no package_id"""
     return hashlib.sha256(package_id.encode()).hexdigest()[:16]
 
+
 def delete_file(file_path, token):
-    """Deleta arquivos e remove referência do Redis"""
     try:
         if Path(file_path).exists():
             os.remove(file_path)
@@ -56,9 +56,9 @@ def delete_file(file_path, token):
     except Exception as e:
         logger.error(f"❌ Erro ao deletar arquivo: {e}")
 
+
 @app.post("/upload/")
 async def upload_files(files: list[UploadFile] = File(...)):
-    """Recebe múltiplos arquivos e gera um ZIP sem compressão"""
     if not files:
         return JSONResponse(status_code=400, content={"error": "Nenhum arquivo enviado."})
 
@@ -83,7 +83,8 @@ async def upload_files(files: list[UploadFile] = File(...)):
         secure_token = generate_secure_token(package_id)
         r.setex(secure_token, 7200, zip_path.as_posix())
 
-        scheduler.add_job(delete_file, 'date', run_date=datetime.now() + timedelta(hours=2), args=[zip_path, secure_token])
+        scheduler.add_job(delete_file, 'date', run_date=datetime.now() + timedelta(hours=2),
+                          args=[zip_path, secure_token])
 
         logger.info(f"✅ Arquivo ZIP criado com sucesso: {zip_path}")
         return {
@@ -95,9 +96,9 @@ async def upload_files(files: list[UploadFile] = File(...)):
         logger.error(f"❌ Erro ao processar upload: {e}")
         return JSONResponse(status_code=500, content={"error": "Erro interno ao processar o upload."})
 
+
 @app.get("/download/{token}")
 async def download_file(token: str):
-    """Permite baixar o arquivo ZIP, se ainda não expirou"""
     try:
         zip_path = r.get(token)
         if not zip_path or not Path(zip_path).exists():
